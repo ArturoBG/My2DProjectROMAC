@@ -31,6 +31,9 @@ public class HealthScript : MonoBehaviour
         if (currentHealth < 0)
         {
             currentHealth = 0;
+            Debug.Log("Character dead");
+            //animacion muerte
+            //desaparezca Gameobject
         }
         CheckColor();
     }
@@ -59,16 +62,16 @@ public class HealthScript : MonoBehaviour
         if (currentHealth >= goodHp && currentHealth <= maxHP && currentHealth > halfHP)
         {
             //green
-            Debug.Log("green bar " + (float)currentHealth / maxHP);
+            Debug.Log("green bar " + (float)currentHealth / maxHP + " " + gameObject.name);
         }
         else if (currentHealth < goodHp && currentHealth > lowHP)
         {
             //yellow
-            Debug.Log("yellow bar " + (float)currentHealth / maxHP);
+            Debug.Log("yellow bar " + (float)currentHealth / maxHP + " " + gameObject.name);
         }
         else if (currentHealth < halfHP && currentHealth > 0)
         {
-            Debug.Log("red bar " + (float)currentHealth / maxHP);
+            Debug.Log("red bar " + (float)currentHealth / maxHP + " " + gameObject.name);
         }
     }
 
