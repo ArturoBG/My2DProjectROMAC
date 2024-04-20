@@ -62,7 +62,6 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\MiscScripts\HealthComponent.cs" />
     <Compile Include="Assets\Scripts\PlayerScripts\PlayerMovement.cs" />
-    <Compile Include="Assets\Free Pixel Art Forest\Demo\MoveBackground.cs" />
     <Compile Include="Assets\Scripts\MiscScripts\colliderAndTrigger.cs" />
   </ItemGroup>
   <ItemGroup>
