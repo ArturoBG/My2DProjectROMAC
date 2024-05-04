@@ -1,11 +1,19 @@
 using System.Collections;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
+    public PlayerAction PlayerInputs;
+    public PlayerAction.PlayerActions playerActions;
+
     public float playerSpeed = 5f;
     public float jumpHeight = 5f;
+    public float counterAttack = 0;
+    public bool isAttacking = false;
+    public bool isDefending = false;
+    public float attackTimer = 3f;
 
     [SerializeField]
     private Rigidbody2D rigidbody2D;
@@ -15,6 +23,9 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField]
     private Animator animator;
+
+    [SerializeField]
+    private SwordCollider swordCollider;
 
     [SerializeField]
     private int counter = 0;
@@ -27,16 +38,45 @@ public class PlayerMovement : MonoBehaviour
     // Start is called before the first frame update
     private void Awake()
     {
+        PlayerInputs = new PlayerAction();
+        playerActions = PlayerInputs.Player;
+
         rigidbody2D = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+
+        //subscriptions
+        playerActions.Attack.performed += ctx => Attack(ctx);
+
+        //defend
+        playerActions.Defend.performed += ctx => Defend(true);
+        playerActions.Defend.canceled += ctx => Defend(false);
+    }
+
+    private void OnEnable()
+    {
+        playerActions.Enable();
+    }
+
+    private void OnDisable()
+    {
+        playerActions.Disable();
     }
 
     // Update is called once per frame
     private void Update()
     {
-        PlayerMove();
+        if (!isAttacking && !isDefending)
+        {
+            PlayerMove();
+        }
+
         TurnPlayer();
         OnAir();
+
+        if (counterAttack > 3)
+        {
+            counterAttack = 0;
+        }
     }
 
     #region Functions
@@ -72,36 +112,63 @@ public class PlayerMovement : MonoBehaviour
 
     #region InputActions
 
+    private void Attack(InputAction.CallbackContext ctx)
+    {
+        //Debug.Log("attack left click mouse");
+        if (ctx.performed)
+        {
+            isAttacking = true;
+            //raise sword
+            animator.SetTrigger("swordIdle");
+            //sword collider on
+            swordCollider.TurnOnCollider();
+            counterAttack++;
+            StopCoroutine(attackSwordRoutine());
+        }
+        StartCoroutine(attackSwordRoutine());
+        animator.SetTrigger("attack" + counterAttack);
+    }
+
+    private IEnumerator attackSwordRoutine()
+    {
+        float timer = attackTimer;
+        while (timer > 0f)
+        {
+            //Debug.Log("timer " + timer);
+            yield return new WaitForSeconds(.25f);
+            timer--;
+        }
+        isAttacking = false;
+        counterAttack = 0;
+        swordCollider.TurnOffCollider();
+        animator.ResetTrigger("attack1");
+        animator.ResetTrigger("attack2");
+        animator.ResetTrigger("attack3");
+
+        // Debug.Log("Timer ended");
+    }
+
+    private void Defend(bool raise)
+    {
+        if (raise && onGround)
+        {
+            Debug.Log("raise sword");
+            animator.SetBool("defend", true);
+            isDefending = true;
+            rigidbody2D.velocity = Vector3.zero;
+        }
+        else
+        {
+            Debug.Log("lower sword");
+            animator.SetBool("defend", false);
+            isDefending = false;
+        }
+    }
+
     private void OnMove(InputValue value)
     {
         moveInput = value.Get<Vector2>();
         //Debug.Log("On Move value " + moveInput);
-    }
-
-    private void OnAttack(InputValue value)
-    {
-        if (value.isPressed)
-        {
-            counter++;
-            Debug.Log("Attack!");
-            animator.SetTrigger("swordIdle");
-            animator.SetTrigger("attack1");
-
-            //elegir random un atack y triggerearlo
-
-            StartCoroutine(attackRoutine(counter));
-        }
-    }
-
-    private IEnumerator attackRoutine(int counter)
-    {
-        float timer = 2f;
-
-        //mientras que no acabe timer
-        //counter va sumando trigger de attack
-        //cuando timer acabe, reiniciamos counter
-
-        yield return null;
     }
 
     private void OnJump(InputValue value)
@@ -137,16 +204,6 @@ public class PlayerMovement : MonoBehaviour
     private void OnSlide(InputValue value)
     {
         //only while onMoveX is true
-    }
-
-    private void OnDefend(InputValue value)
-    {
-        if (value.isPressed)
-        {
-            animator.SetBool("defend", true);
-        }
-        ///TODO
-        ///defend turn to false
     }
 
     private void PlayDesiredState(string stateName)
