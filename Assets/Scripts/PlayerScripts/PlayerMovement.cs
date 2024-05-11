@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Threading;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -46,7 +45,6 @@ public class PlayerMovement : MonoBehaviour
 
         //subscriptions
         playerActions.Attack.performed += ctx => Attack(ctx);
-
         //defend
         playerActions.Defend.performed += ctx => Defend(true);
         playerActions.Defend.canceled += ctx => Defend(false);
@@ -65,38 +63,39 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        if (!isAttacking && !isDefending)
-        {
-            PlayerMove();
-        }
-
-        TurnPlayer();
-        OnAir();
+        PlayerMove(playerActions.Move.ReadValue<Vector2>());
 
         if (counterAttack > 3)
         {
             counterAttack = 0;
         }
+        TurnPlayer();
+        OnAir();
     }
 
     #region Functions
 
-    private void PlayerMove()
+    private void PlayerMove(Vector2 moveInput)
     {
-        Vector2 playerVelocity = new Vector2(moveInput.x * playerSpeed, rigidbody2D.velocity.y);
-        rigidbody2D.velocity = playerVelocity;
-
-        //Animator setTrigger RUn!
-        if (moveOnX)
+        if (!isDefending)
         {
-            animator.SetBool("run", true);
+            Vector2 playerVelocity = new Vector2(moveInput.x * playerSpeed, rigidbody2D.velocity.y);
+            rigidbody2D.velocity = playerVelocity;
+
+            //Animator setTrigger RUn!
+            if (moveOnX)
+            {
+                animator.SetBool("run", true);
+            }
+            else
+            {
+                animator.SetBool("run", false);
+            }
         }
         else
         {
-            animator.SetBool("run", false);
+            rigidbody2D.velocity = Vector2.zero;
         }
-
-        //animator.SetBool("run", moveOnX);
     }
 
     private void TurnPlayer()
@@ -104,7 +103,7 @@ public class PlayerMovement : MonoBehaviour
         moveOnX = Mathf.Abs(rigidbody2D.velocity.x) > Mathf.Epsilon;
         if (moveOnX)
         {
-            transform.localScale = new Vector3(Mathf.Sign(rigidbody2D.velocity.x), 1f); //* transform.localScale.y
+            transform.localScale = new Vector3(Mathf.Sign(rigidbody2D.velocity.x), 1f) * transform.localScale.y; //* transform.localScale.y
         }
     }
 
@@ -117,7 +116,6 @@ public class PlayerMovement : MonoBehaviour
         //Debug.Log("attack left click mouse");
         if (ctx.performed)
         {
-            isAttacking = true;
             //raise sword
             animator.SetTrigger("swordIdle");
             //sword collider on
@@ -135,10 +133,9 @@ public class PlayerMovement : MonoBehaviour
         while (timer > 0f)
         {
             //Debug.Log("timer " + timer);
-            yield return new WaitForSeconds(.25f);
+            yield return new WaitForSeconds(.5f);
             timer--;
         }
-        isAttacking = false;
         counterAttack = 0;
         swordCollider.TurnOffCollider();
         animator.ResetTrigger("attack1");
@@ -150,12 +147,12 @@ public class PlayerMovement : MonoBehaviour
 
     private void Defend(bool raise)
     {
+        Debug.Log("Defend");
         if (raise && onGround)
         {
             Debug.Log("raise sword");
             animator.SetBool("defend", true);
             isDefending = true;
-            rigidbody2D.velocity = Vector3.zero;
         }
         else
         {
