@@ -392,6 +392,7 @@
 "Assets/Scripts/Enemies/EnemyScript.cs"
 "Assets/Scripts/MiscScripts/colliderAndTrigger.cs"
 "Assets/Scripts/MiscScripts/HealthComponent.cs"
+"Assets/Scripts/MiscScripts/MenuManager.cs"
 "Assets/Scripts/PlayerScripts/PlayerMovement.cs"
 "Assets/Scripts/PlayerScripts/SwordCollider.cs"
 "Assets/Settings/PlayerAction.cs"
