@@ -859,6 +859,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 641999893}
     m_Modifications:
+    - target: {fileID: 607129651968423404, guid: ede489a278db8bc4fbe143aecbc953f5, type: 3}
+      propertyPath: characterHealth
+      value: 417
+      objectReference: {fileID: 0}
     - target: {fileID: 6034492513081601996, guid: ede489a278db8bc4fbe143aecbc953f5, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0

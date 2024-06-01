@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,6 +17,20 @@ public class EnemyScript : MonoBehaviour
     [SerializeField]
     private bool movingToB = true;
 
+    [SerializeField]
+    private bool isAttacking = false;
+
+    public bool ShooterClass = false;
+
+    [SerializeField]
+    private GameObject arrowPrefab;
+
+    [SerializeField]
+    private Transform spawnerArrows;
+
+    public float fireRate = 1f;
+    public float nextFireTime = 0f;
+
     private void Start()
     {
         enemyAnimator = GetComponent<Animator>();
@@ -24,21 +39,30 @@ public class EnemyScript : MonoBehaviour
 
     private void Update()
     {
-        Move();
-        Flip();
+        if (!isAttacking)
+        {
+            Move();
+            Flip();
 
-        if (moveOnX)
-        {
-            enemyAnimator.SetBool("run", true);
+            if (moveOnX)
+            {
+                enemyAnimator.SetBool("run", true);
+            }
+            else
+            {
+                enemyAnimator.SetBool("run", false);
+            }
         }
-        else
+        else//if is shooter
         {
-            enemyAnimator.SetBool("run", false);
+            Debug.Log("Shoot!");
+            Shoot();
         }
     }
 
     public void Move()
     {
+        Debug.Log("Move");
         if (movingToB)
         {
             enemyRB.velocity = new Vector2(speed, enemyRB.velocity.y);
@@ -67,9 +91,44 @@ public class EnemyScript : MonoBehaviour
         }
     }
 
+    public void Shoot()
+    {
+        if (Time.time >= nextFireTime)
+        {
+            Debug.Log("arrow shoot");
+            GameObject arrow = Instantiate(arrowPrefab, spawnerArrows.position, Quaternion.identity);
+            arrow.GetComponent<Projectile>().SetDirection(movingToB);
+            nextFireTime = Time.time + fireRate;
+        }
+    }
+
+    public void PlayerFound()
+    {
+        Debug.Log("Encontre a jugador!");
+        isAttacking = true;
+        enemyRB.velocity = Vector2.zero;
+        enemyAnimator.SetBool("run", false);
+        enemyAnimator.SetBool("attack", true);
+
+        Shoot();
+    }
+
+    public void PlayerLost()
+    {
+        Debug.Log("perdi a jugador!");
+        isAttacking = false;
+        enemyAnimator.SetBool("run", true);
+        enemyAnimator.SetBool("attack", false);
+    }
+
+    /// <summary>
+    /// detectar arma del player
+    /// recibir daño
+    /// </summary>
+    /// <param name="collision"></param>
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        Debug.Log("collision entered " + collision.name);
+        //Debug.Log("collision entered " + collision.name);
         if (collision.tag == "playerWeapons")
         {
             Debug.Log("damage!");
